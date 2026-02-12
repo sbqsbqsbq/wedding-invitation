@@ -366,6 +366,7 @@ const GallerySection = ({ bgColor = 'white' }: GallerySectionProps) => {
                 fill
                 sizes="90vw"
                 quality={90}
+                unoptimized
                 style={{ objectFit: 'contain', background: 'transparent' }}
                 draggable={false}
                 onContextMenu={e => e.preventDefault()}
