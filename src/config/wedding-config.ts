@@ -69,7 +69,7 @@ export const weddingConfig = {
       departureTime: "오전 10시 출발",
       contact: {
         name: "길벗관광",
-        tel: "010-1234-5678",
+        tel: "010-6331-5665",
       },
     },
     // 신부측 배차 안내
