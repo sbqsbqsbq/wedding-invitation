@@ -65,10 +65,10 @@ export const weddingConfig = {
     parking: "건물 지하 주차장 이용 가능 (2시간 무료)",
     // 신랑측 배차 안내
     groomShuttle: {
-      location: "신랑측 배차 출발지",
-      departureTime: "오전 10시 30분 출발",
+      location: "신천역 5번 출구",
+      departureTime: "오전 10시 출발",
       contact: {
-        name: "담당자명",
+        name: "길벗관광",
         tel: "010-1234-5678",
       },
     },
