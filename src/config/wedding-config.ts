@@ -48,13 +48,13 @@ export const weddingConfig = {
   venue: {
     name: "서강대학교 곤자가컨벤션",
     address: "서울시 마포구 백범로 35(대흥동)\n서강대학교 후문 내 곤자가컨벤션",
-    tel: "02-1234-5678",
+    tel: "02-711-3115",
     naverMapId: "곤자가컨벤션", // 네이버 지도 검색용 장소명
     coordinates: {
-      latitude: 37.5665,
-      longitude: 126.978,
+      latitude: 37.5511943,
+      longitude: 126.9429624,
     },
-    placeId: "123456789", // 네이버 지도 장소 ID
+    placeId: "12913183", // 네이버 지도 장소 ID
     mapZoom: "17", // 지도 줌 레벨
     mapNaverCoordinates: "14141300,4507203,15,0,0,0,dh", // 네이버 지도 길찾기 URL용 좌표 파라미터 (구 형식)
     transportation: {

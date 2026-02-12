@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import styled from 'styled-components';
-import { weddingConfig } from '../../config/wedding-config';
+import React from "react";
+import styled from "styled-components";
+import { weddingConfig } from "../../config/wedding-config";
 
-const watermarkId = weddingConfig.meta._jwk_watermark_id || 'JWK-NonCommercial';
+const watermarkId = weddingConfig.meta._jwk_watermark_id || "JWK-NonCommercial";
 
 const jwk_checkNonCommercial = () => {
   console.log(`Watermark: ${watermarkId.slice(0, 5)}`);
@@ -12,20 +12,20 @@ const jwk_checkNonCommercial = () => {
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  
+
   return (
     <FooterContainer>
       {/* WeddingInvitation-Footer-NonCommercial DO NOT CHANGE*/}
       <FooterContent>
-        <Copyright>© {currentYear} Jawon Koo</Copyright>
+        {/* <Copyright>© {currentYear} Daeyoung Kim</Copyright> */}
         <Credits>Made with ❤️</Credits>
-        <GithubLink
+        {/* <GithubLink
           href="https://github.com/jw-koo/wedding-invitation"
           target="_blank"
           rel="noopener noreferrer"
         >
           GitHub 저장소 바로가기
-        </GithubLink>
+        </GithubLink> */}
         <HiddenAttribution data-jwk-id={watermarkId}>
           NonCommercial
         </HiddenAttribution>
@@ -36,8 +36,8 @@ const Footer = () => {
 
 const FooterContainer = styled.footer`
   padding: 2rem 1.5rem;
-  background-color: #F8F6F2;
-  border-top: 1px solid rgba(0,0,0,0.05);
+  background-color: #f8f6f2;
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
 `;
 
 const FooterContent = styled.div`
@@ -82,4 +82,4 @@ const GithubLink = styled.a`
   }
 `;
 
-export default Footer; 
+export default Footer;
