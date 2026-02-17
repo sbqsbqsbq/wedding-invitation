@@ -154,8 +154,14 @@ export const weddingConfig = {
 
   // RSVP 설정
   rsvp: {
-    enabled: false, // RSVP 섹션 표시 여부
-    showMealOption: false, // 식사 여부 입력 옵션 표시 여부
+    enabled: true, // RSVP 섹션 표시 여부
+    showMealOption: true, // 식사 여부 입력 옵션 표시 여부
+  },
+
+  // Google Sheets 연동 설정 (Apps Script Web App URL)
+  googleSheets: {
+    enabled: true,
+    webAppUrl: process.env.GOOGLE_SHEETS_WEBHOOK_URL || "",
   },
 
   // 슬랙 알림 설정

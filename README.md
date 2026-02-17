@@ -21,7 +21,7 @@
 - 실시간 D-day 카운트다운 타이머 (숫자 고정 너비 적용)
 - 네이버 지도 API를 활용한 위치 정보 제공 및 길찾기 기능
 - 이미지 갤러리 (스크롤/그리드 레이아웃 선택 가능, 위치 설정 가능, 터치 스와이프 지원)
-- 참석 여부 응답 시스템 및 Slack 연동 알림 (활성화/비활성화 설정 가능)
+- 참석 여부 응답 시스템 및 Google Sheets 연동 저장 (활성화/비활성화 설정 가능)
 - 계좌번호 아코디언 펼침/접기 기능 및 복사 기능
 - 신랑/신부측 배차 안내 아코디언 기능
 - 고급스러운 버튼 리플 효과 및 터치 피드백
@@ -35,7 +35,7 @@
 - styled-components
 - 네이버 지도 API
 - Web Share API
-- Slack Webhook API
+- Google Apps Script Web App
 
 ## 시작하기
 
@@ -57,8 +57,8 @@
    # 네이버 지도 API 클라이언트 ID
    NEXT_PUBLIC_NAVER_MAP_CLIENT_ID=your_naver_map_client_id
    
-   # Slack Webhook URL (참석 여부 알림용)
-   NEXT_PUBLIC_SLACK_WEBHOOK_URL=your_slack_webhook_url
+   # Google Apps Script Web App URL (참석 여부 저장용)
+   GOOGLE_SHEETS_WEBHOOK_URL=your_google_apps_script_web_app_url
    
    # 사이트 URL (배포 후)
    NEXT_PUBLIC_SITE_URL=https://your-wedding-site.com
@@ -82,7 +82,7 @@
 - 초대의 말씀
 - 계좌 정보
 - **RSVP 설정 (활성화/비활성화)**
-- Slack 알림 설정
+- Google Sheets 연동 설정
 
 ### RSVP 섹션 설정
 
@@ -225,24 +225,47 @@ gallery: {
 
 두 레이아웃 모두 이미지 클릭 시 확대 보기를 지원하며, 확대 보기에서는 키보드 방향키, 마우스 휠, 터치 제스처로 이미지를 탐색할 수 있습니다.
 
-## Slack 웹훅 설정하기
+## Google Sheets 연동 설정하기
 
-참석 여부 응답을 Slack으로 알림 받기 위한 설정 방법:
+참석 여부 응답을 Google Sheets에 저장하려면 Google Apps Script Web App을 사용하세요.
 
-1. [Slack API 웹사이트](https://api.slack.com/apps)에 접속하여 로그인합니다.
-2. "Create New App"을 클릭하고 "From scratch"를 선택합니다.
-3. 앱 이름(예: "Wedding RSVP")과 Slack 워크스페이스를 선택합니다.
-4. 왼쪽 메뉴에서 "Incoming Webhooks"를 선택하고 활성화합니다.
-5. "Add New Webhook to Workspace"를 클릭합니다.
-6. 알림을 받을 채널을 선택하고 "Allow"를 클릭합니다.
-7. 생성된 Webhook URL을 `.env.local` 파일의 `NEXT_PUBLIC_SLACK_WEBHOOK_URL` 값으로 설정합니다.
-8. `wedding-config.ts` 파일에서 Slack 채널 이름을 설정합니다:
-   ```typescript
-   slack: {
-     webhookUrl: process.env.NEXT_PUBLIC_SLACK_WEBHOOK_URL || "",
-     channel: "#wedding-rsvp", // 알림을 받을 채널
-   }
-   ```
+1. 새 Google Spreadsheet를 만들고, 첫 번째 시트의 헤더를 아래 순서로 입력합니다.
+   - `접수시각(KST)`
+   - `이름`
+   - `구분`
+   - `참석여부`
+   - `참석인원`
+   - `식사여부`
+   - `접수채널`
+2. [Google Apps Script](https://script.google.com/)에서 새 프로젝트를 생성합니다.
+3. 아래 예시 코드를 붙여 넣고, `시트ID`와 `시트이름`을 본인 값으로 변경합니다.
+
+```javascript
+function doPost(e) {
+  var sheet = SpreadsheetApp.openById('시트ID').getSheetByName('시트이름');
+  var payload = JSON.parse(e.postData.contents || '{}');
+
+  sheet.appendRow([
+    payload.submittedAtKst || '',
+    payload.name || '',
+    payload.side || '',
+    payload.isAttending ? '참석' : '불참',
+    payload.guestCount || 0,
+    payload.hasMeal ? '식사 함' : '식사 안 함',
+    payload.channel || 'web'
+  ]);
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ success: true }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+```
+
+4. Apps Script를 배포합니다.
+   - `Deploy` -> `New deployment` -> `Web app`
+   - `Who has access`는 `Anyone` 또는 `Anyone with Google account`로 설정
+5. 배포된 Web App URL을 `.env.local`의 `GOOGLE_SHEETS_WEBHOOK_URL`에 설정합니다.
+6. `src/config/wedding-config.ts`에서 `rsvp.enabled`와 `googleSheets.enabled`가 `true`인지 확인합니다.
 
 ## 이미지 및 폰트 추가하기
 
@@ -371,12 +394,12 @@ gallery: {
   - 로컬 개발 시 http://localhost:3000이 등록되어 있는지
   - 배포 시 실제 도메인이 등록되어 있는지
 
-### 참석 여부 알림이 Slack으로 전송되지 않는 경우
+### 참석 여부가 Google Sheets에 저장되지 않는 경우
 
-- `.env.local` 파일에 올바른 Slack Webhook URL이 설정되어 있는지 확인하세요.
-- Webhook URL의 형식을 확인하세요 (https://hooks.slack.com/services/... 형식).
-- Slack 앱이 워크스페이스에 올바르게 설치되어 있는지 확인하세요.
-- 알림을 보낼 채널이 존재하는지, 그리고 앱이 채널에 접근 권한이 있는지 확인하세요.
+- `.env.local` 파일에 `GOOGLE_SHEETS_WEBHOOK_URL`이 올바르게 설정되어 있는지 확인하세요.
+- Apps Script 배포 권한이 외부 POST 요청을 허용하는지 확인하세요.
+- Apps Script 코드의 시트 ID/시트 이름이 정확한지 확인하세요.
+- Vercel 등 배포 환경에도 동일한 환경변수가 등록되어 있는지 확인하세요.
 
 ### 공유 기능이 작동하지 않는 경우
 
