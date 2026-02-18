@@ -1,8 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Wedding Invitation | Daeyeong & Jiin',
-  description: 'Wedding Invitation',
+  title: "Wedding Invitation | Daeyeong & Jeen",
+  description: "Wedding Invitation",
 };
 
 export default function EnLayout({

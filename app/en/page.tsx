@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
 import Image from 'next/image';
 import LanguageSwitcher from '../../src/components/LanguageSwitcher';
@@ -29,6 +29,9 @@ const HomeEn = () => {
     success: boolean;
     message: string;
   } | null>(null);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
+  const [isGalleryLoading, setIsGalleryLoading] = useState(true);
+  const [galleryError, setGalleryError] = useState<string | null>(null);
 
   const countdownText = useMemo(() => {
     const diff = eventDate.getTime() - Date.now();
@@ -37,6 +40,26 @@ const HomeEn = () => {
     }
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     return `${days} days left until our wedding`;
+  }, []);
+
+  useEffect(() => {
+    const fetchGallery = async () => {
+      try {
+        setIsGalleryLoading(true);
+        const response = await fetch('/api/gallery');
+        if (!response.ok) {
+          throw new Error('Failed to fetch gallery');
+        }
+        const data = await response.json();
+        const images = Array.isArray(data.images) ? data.images : [];
+        setGalleryImages(images);
+      } catch {
+        setGalleryError('Unable to load gallery images.');
+      } finally {
+        setIsGalleryLoading(false);
+      }
+    };
+    fetchGallery();
   }, []);
 
   const navigateToNaver = () => {
@@ -259,6 +282,27 @@ const HomeEn = () => {
           </SubmitButton>
         </Form>
       </Section>
+
+      <Section>
+        <SectionTitle>Gallery</SectionTitle>
+        {isGalleryLoading && <Paragraph>Loading images...</Paragraph>}
+        {!isGalleryLoading && galleryError && <Paragraph>{galleryError}</Paragraph>}
+        {!isGalleryLoading && !galleryError && (
+          <GalleryGrid>
+            {galleryImages.map((image, idx) => (
+              <GalleryItem key={`${image}-${idx}`}>
+                <GalleryImage
+                  src={image}
+                  alt={`Wedding gallery ${idx + 1}`}
+                  fill
+                  sizes="(max-width: 768px) 50vw, 25vw"
+                  style={{ objectFit: 'cover' }}
+                />
+              </GalleryItem>
+            ))}
+          </GalleryGrid>
+        )}
+      </Section>
     </Main>
   );
 };
@@ -409,6 +453,31 @@ const Status = styled.p<{ $success: boolean }>`
   border-radius: 8px;
   color: ${({ $success }) => ($success ? '#1b5e20' : '#b71c1c')};
   background: ${({ $success }) => ($success ? '#e8f5e9' : '#ffebee')};
+`;
+
+const GalleryGrid = styled.div`
+  max-width: 56rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+
+  @media (min-width: 900px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+`;
+
+const GalleryItem = styled.div`
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+const GalleryImage = styled(Image)`
+  display: block;
 `;
 
 export default HomeEn;
