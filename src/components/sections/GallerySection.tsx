@@ -13,6 +13,7 @@ const GallerySection = ({ bgColor = 'white' }: GallerySectionProps) => {
   const [images, setImages] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchGallery = async () => {
@@ -36,6 +37,26 @@ const GallerySection = ({ bgColor = 'white' }: GallerySectionProps) => {
     fetchGallery();
   }, []);
 
+  useEffect(() => {
+    if (!expandedImage) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setExpandedImage(null);
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [expandedImage]);
+
   return (
     <GallerySectionContainer $bgColor={bgColor}>
       <SectionTitle>갤러리</SectionTitle>
@@ -47,7 +68,7 @@ const GallerySection = ({ bgColor = 'white' }: GallerySectionProps) => {
       {!isLoading && images.length > 0 && (
         <GalleryGrid>
           {images.map((image, idx) => (
-            <GalleryItem key={`${image}-${idx}`}>
+            <GalleryItem key={`${image}-${idx}`} onClick={() => setExpandedImage(image)}>
               <GalleryImage
                 src={image}
                 alt={`웨딩 갤러리 이미지 ${idx + 1}`}
@@ -58,6 +79,25 @@ const GallerySection = ({ bgColor = 'white' }: GallerySectionProps) => {
             </GalleryItem>
           ))}
         </GalleryGrid>
+      )}
+
+      {expandedImage && (
+        <ExpandedImageOverlay onClick={() => setExpandedImage(null)} aria-modal="true" role="dialog">
+          <ExpandedImageContainer onClick={(e) => e.stopPropagation()}>
+            <ExpandedImageWrapper>
+              <Image
+                src={expandedImage}
+                alt="확대된 웨딩 갤러리 이미지"
+                fill
+                sizes="90vw"
+                style={{ objectFit: 'contain' }}
+              />
+            </ExpandedImageWrapper>
+            <CloseButton type="button" onClick={() => setExpandedImage(null)} aria-label="닫기">
+              ×
+            </CloseButton>
+          </ExpandedImageContainer>
+        </ExpandedImageOverlay>
       )}
     </GallerySectionContainer>
   );
@@ -114,10 +154,50 @@ const GalleryItem = styled.div`
   aspect-ratio: 1 / 1;
   border-radius: 8px;
   overflow: hidden;
+  cursor: pointer;
 `;
 
 const GalleryImage = styled(Image)`
   display: block;
+`;
+
+const ExpandedImageOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ExpandedImageContainer = styled.div`
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ExpandedImageWrapper = styled.div`
+  position: relative;
+  width: 90vw;
+  height: 90vh;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 50%;
+  background-color: var(--secondary-color);
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
 `;
 
 export default GallerySection;

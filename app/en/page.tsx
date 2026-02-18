@@ -32,6 +32,7 @@ const HomeEn = () => {
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [isGalleryLoading, setIsGalleryLoading] = useState(true);
   const [galleryError, setGalleryError] = useState<string | null>(null);
+  const [expandedImage, setExpandedImage] = useState<string | null>(null);
 
   const countdownText = useMemo(() => {
     const diff = eventDate.getTime() - Date.now();
@@ -61,6 +62,26 @@ const HomeEn = () => {
     };
     fetchGallery();
   }, []);
+
+  useEffect(() => {
+    if (!expandedImage) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setExpandedImage(null);
+      }
+    };
+
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [expandedImage]);
 
   const navigateToNaver = () => {
     const url = `https://map.naver.com/p/directions/-/-/-/walk/place/${weddingConfigEn.venue.placeId}?c=${weddingConfigEn.venue.mapZoom},0,0,0,dh`;
@@ -290,7 +311,7 @@ const HomeEn = () => {
         {!isGalleryLoading && !galleryError && (
           <GalleryGrid>
             {galleryImages.map((image, idx) => (
-              <GalleryItem key={`${image}-${idx}`}>
+              <GalleryItem key={`${image}-${idx}`} onClick={() => setExpandedImage(image)}>
                 <GalleryImage
                   src={image}
                   alt={`Wedding gallery ${idx + 1}`}
@@ -303,6 +324,25 @@ const HomeEn = () => {
           </GalleryGrid>
         )}
       </Section>
+
+      {expandedImage && (
+        <ExpandedImageOverlay onClick={() => setExpandedImage(null)} aria-modal="true" role="dialog">
+          <ExpandedImageContainer onClick={(e) => e.stopPropagation()}>
+            <ExpandedImageWrapper>
+              <Image
+                src={expandedImage}
+                alt="Expanded wedding gallery image"
+                fill
+                sizes="90vw"
+                style={{ objectFit: 'contain' }}
+              />
+            </ExpandedImageWrapper>
+            <CloseButton type="button" onClick={() => setExpandedImage(null)} aria-label="Close">
+              ×
+            </CloseButton>
+          </ExpandedImageContainer>
+        </ExpandedImageOverlay>
+      )}
     </Main>
   );
 };
@@ -474,10 +514,50 @@ const GalleryItem = styled.div`
   aspect-ratio: 1 / 1;
   border-radius: 8px;
   overflow: hidden;
+  cursor: pointer;
 `;
 
 const GalleryImage = styled(Image)`
   display: block;
+`;
+
+const ExpandedImageOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ExpandedImageContainer = styled.div`
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const ExpandedImageWrapper = styled.div`
+  position: relative;
+  width: 90vw;
+  height: 90vh;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: none;
+  border-radius: 50%;
+  background-color: #c9b39d;
+  color: #fff;
+  font-size: 1.5rem;
+  cursor: pointer;
 `;
 
 export default HomeEn;
