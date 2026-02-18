@@ -4,6 +4,7 @@ import { Suspense, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import MainSection from '../src/components/sections/MainSection';
 import { weddingConfig } from '../src/config/wedding-config';
+import LanguageSwitcher from '../src/components/LanguageSwitcher';
 
 // 동적 임포트로 코드 분할 및 지연 로딩 적용
 const DateSection = dynamic(() => import('../src/components/sections/DateSection'), {
@@ -64,6 +65,7 @@ export default function Home() {
 
   return (
     <main>
+      <LanguageSwitcher current="ko" />
       <MainSection />
       <InvitationSection bgColor={sectionColorMap['invitation']} />
       <DateSection bgColor={sectionColorMap['date']} />
