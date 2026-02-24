@@ -158,6 +158,10 @@ export const weddingConfig = {
     showMealOption: true, // 식사 여부 입력 옵션 표시 여부
   },
 
+  guestbook: {
+    enabled: true,
+  },
+
   // Google Sheets 연동 설정 (Apps Script Web App URL)
   googleSheets: {
     enabled: true,
