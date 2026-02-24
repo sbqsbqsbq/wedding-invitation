@@ -49,6 +49,9 @@ export const weddingConfigEn = {
   rsvp: {
     showMealOption: weddingConfig.rsvp?.showMealOption ?? true,
   },
+  guestbook: {
+    enabled: weddingConfig.guestbook?.enabled ?? true,
+  },
 };
 
 export type WeddingConfigEn = typeof weddingConfigEn;

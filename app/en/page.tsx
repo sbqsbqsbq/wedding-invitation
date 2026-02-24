@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import Image from 'next/image';
 import LanguageSwitcher from '../../src/components/LanguageSwitcher';
 import { weddingConfigEn } from '../../src/config/wedding-config.en';
+import { fetchGuestbookEntries, submitGuestbookEntry } from '../../src/lib/guestbook-client';
 
 type Side = 'BRIDE' | 'GROOM' | '';
 
@@ -33,6 +34,17 @@ const HomeEn = () => {
   const [isGalleryLoading, setIsGalleryLoading] = useState(true);
   const [galleryError, setGalleryError] = useState<string | null>(null);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
+  const [guestbookName, setGuestbookName] = useState('');
+  const [guestbookMessage, setGuestbookMessage] = useState('');
+  const [guestbookEntries, setGuestbookEntries] = useState<
+    { id: string; name: string; message: string; createdAt: string }[]
+  >([]);
+  const [guestbookLoading, setGuestbookLoading] = useState(true);
+  const [guestbookSubmitting, setGuestbookSubmitting] = useState(false);
+  const [guestbookStatus, setGuestbookStatus] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   const countdownText = useMemo(() => {
     const diff = eventDate.getTime() - Date.now();
@@ -61,6 +73,25 @@ const HomeEn = () => {
       }
     };
     fetchGallery();
+  }, []);
+
+  useEffect(() => {
+    const loadGuestbook = async () => {
+      try {
+        setGuestbookLoading(true);
+        const entries = await fetchGuestbookEntries(20);
+        setGuestbookEntries(entries);
+      } catch {
+        setGuestbookStatus({
+          success: false,
+          message: 'Unable to load guestbook messages.',
+        });
+      } finally {
+        setGuestbookLoading(false);
+      }
+    };
+
+    loadGuestbook();
   }, []);
 
   useEffect(() => {
@@ -150,6 +181,43 @@ const HomeEn = () => {
       });
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGuestbookSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!guestbookName.trim() || !guestbookMessage.trim()) {
+      setGuestbookStatus({
+        success: false,
+        message: 'Please fill in both name and message.',
+      });
+      return;
+    }
+
+    setGuestbookSubmitting(true);
+    try {
+      const entry = await submitGuestbookEntry({
+        name: guestbookName,
+        message: guestbookMessage,
+        locale: 'en',
+      });
+
+      setGuestbookEntries((prev) => [entry, ...prev].slice(0, 20));
+      setGuestbookName('');
+      setGuestbookMessage('');
+      setGuestbookStatus({
+        success: true,
+        message: 'Your message has been added. Thank you.',
+      });
+    } catch (error) {
+      setGuestbookStatus({
+        success: false,
+        message:
+          error instanceof Error ? error.message : 'Failed to submit your message. Please try again.',
+      });
+    } finally {
+      setGuestbookSubmitting(false);
     }
   };
 
@@ -304,7 +372,70 @@ const HomeEn = () => {
         </Form>
       </Section>
 
-      <Section>
+      {weddingConfigEn.guestbook?.enabled !== false && (
+        <Section>
+          <SectionTitle>Guestbook</SectionTitle>
+          <Message>
+            Please leave us a short message.
+            {'\n'}
+            We are grateful for your warm words.
+          </Message>
+          {guestbookStatus && (
+            <Status $success={guestbookStatus.success}>{guestbookStatus.message}</Status>
+          )}
+          <Form onSubmit={handleGuestbookSubmit}>
+            <Input
+              type="text"
+              placeholder="Your name"
+              value={guestbookName}
+              onChange={(e) => setGuestbookName(e.target.value)}
+              maxLength={20}
+              required
+            />
+            <TextArea
+              placeholder="Write your message"
+              value={guestbookMessage}
+              onChange={(e) => setGuestbookMessage(e.target.value)}
+              maxLength={300}
+              rows={4}
+              required
+            />
+            <SubmitButton type="submit" disabled={guestbookSubmitting}>
+              {guestbookSubmitting ? 'Submitting...' : 'Post Message'}
+            </SubmitButton>
+          </Form>
+          <SmallTitle>Recent Messages</SmallTitle>
+          {guestbookLoading && <Paragraph>Loading messages...</Paragraph>}
+          {!guestbookLoading && guestbookEntries.length === 0 && (
+            <Paragraph>No messages yet.</Paragraph>
+          )}
+          {!guestbookLoading && guestbookEntries.length > 0 && (
+            <GuestbookList>
+              {guestbookEntries.map((entry) => (
+                <GuestbookCard key={entry.id}>
+                  <GuestbookMeta>
+                    <strong>{entry.name}</strong>
+                    <span>
+                      {new Date(entry.createdAt).toLocaleString('en-US', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                        timeZone: 'Asia/Seoul',
+                      })}
+                    </span>
+                  </GuestbookMeta>
+                  <Message>{entry.message}</Message>
+                </GuestbookCard>
+              ))}
+            </GuestbookList>
+          )}
+        </Section>
+      )}
+
+      <Section $beige>
         <SectionTitle>Gallery</SectionTitle>
         {isGalleryLoading && <Paragraph>Loading images...</Paragraph>}
         {!isGalleryLoading && galleryError && <Paragraph>{galleryError}</Paragraph>}
@@ -468,6 +599,14 @@ const Input = styled.input`
   border-radius: 8px;
 `;
 
+const TextArea = styled.textarea`
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+`;
+
 const Select = styled.select`
   width: 100%;
   padding: 0.8rem 0.9rem;
@@ -493,6 +632,35 @@ const Status = styled.p<{ $success: boolean }>`
   border-radius: 8px;
   color: ${({ $success }) => ($success ? '#1b5e20' : '#b71c1c')};
   background: ${({ $success }) => ($success ? '#e8f5e9' : '#ffebee')};
+`;
+
+const GuestbookList = styled.div`
+  max-width: 40rem;
+  margin: 1rem auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const GuestbookCard = styled.article`
+  border: 1px solid #e8dfd5;
+  border-radius: 10px;
+  padding: 0.9rem;
+  text-align: left;
+  background: #fff;
+`;
+
+const GuestbookMeta = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.4rem;
+
+  span {
+    color: #7d7d7d;
+    font-size: 0.82rem;
+  }
 `;
 
 const GalleryGrid = styled.div`
