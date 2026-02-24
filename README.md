@@ -294,6 +294,10 @@ function doPost(e) {
 
 이 프로젝트는 Vercel 또는 Netlify에 쉽게 배포할 수 있습니다.
 
+> 방명록 기능을 로컬 파일(`data/guestbook.log`)로 저장하는 경우, 쓰기 가능한 영구 디스크가 있는 런타임이 필요합니다.
+> 서버리스/ephemeral 파일시스템 환경에서는 인스턴스 재시작 시 데이터가 유실될 수 있습니다.
+> Vercel/Netlify 기본 서버리스 런타임에서는 방명록 저장소를 별도 DB/외부 스토리지로 분리하는 구성을 권장합니다.
+
 ### Vercel 배포
 
 1. [Vercel](https://vercel.com)에 가입하고 GitHub 계정을 연결합니다.
